@@ -39,7 +39,7 @@ namespace sudoku3
             {
                 for (int j = 0; j < N; j++)
                 {
-                    cells[i, j] = new Cell("", this, X + cellwidth * i, Y + cellwidth * j, i, j);
+                    cells[j, i] = new Cell("", this, X + cellwidth * j, Y + cellwidth * i, j, i);
                 }
             }
 
@@ -82,6 +82,17 @@ namespace sudoku3
                 }
             }
             return null;
+        }
+
+        public void check_all_cells_for_mistake()
+        {
+            foreach(Cell c in cells)
+            {
+                if(c.editable == false) { continue; }
+                if(c.value == "") { continue; }
+                c.correct = c.check_correctness();
+            }
+            form.Invalidate();
         }
     }
 }

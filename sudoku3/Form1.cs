@@ -21,7 +21,6 @@ namespace sudoku3
             InitializeComponent();
 
             pen = new Pen(Color.FromArgb(0, 0, 0));
-            board = new Board(this);
             MODULE_ACTIVE = "menu";
         }
 
@@ -86,13 +85,18 @@ namespace sudoku3
                     decision_panel.Dispose();
                 }
 
-                if(!decision_panel.Disposing)
+                if(decision_panel != null)
                 {
-                    if(e.KeyValue == 46 || e.KeyValue == 8)
+                    if (!decision_panel.IsDisposed)
                     {
-                        board.active_cell.value = "";
-                        board.active_cell.correct = true;
-                        decision_panel.Dispose();
+                        if (e.KeyValue == 46 || e.KeyValue == 8)
+                        {
+                            board.active_cell.value = "";
+                            board.active_cell.correct = true;
+                            decision_panel.Dispose();
+                            board.check_all_cells_for_mistake();
+                            Invalidate();
+                        }
                     }
                 }
             }
@@ -100,6 +104,7 @@ namespace sudoku3
 
         private void button_start_click(object sender, EventArgs e)
         {
+            board = new Board(this);
             button_start.Dispose();
             Invalidate();
             MODULE_ACTIVE = "krossvord";
@@ -149,7 +154,7 @@ namespace sudoku3
                 {
                     board.active_cell.value = b.Text;
                     board.empty_cells_n--;
-                    board.active_cell.correct = board.active_cell.check_correctness();
+                    board.check_all_cells_for_mistake();
                 }
             }
 

@@ -46,10 +46,10 @@ namespace sudoku3
                 {
                     if (base_sudoku[i,j] == null)
                     {
-                        cells[j, i].value = "";
+                        cells[i, j].value = "";
                     } else
                     {
-                        cells[j, i].value = Convert.ToString(base_sudoku[i, j]);
+                        cells[i, j].value = Convert.ToString(base_sudoku[i, j]);
                     }
                 }
             }
@@ -124,7 +124,7 @@ namespace sudoku3
             {
                 int x, y;
                 (x, y) = (random.Next() % 9, random.Next() % 9);
-                if (cells[y, x].editable == true)
+                if (cells[x, y].editable == true)
                 {
                     i--;
                     continue;
@@ -132,7 +132,7 @@ namespace sudoku3
 
                 cells[x, y].board.empty_cells_n++;
                 base_sudoku[x, y] = null;
-                cells[y, x].editable = true;
+                cells[x, y].editable = true;
             }
         }
     }

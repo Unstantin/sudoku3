@@ -47,7 +47,7 @@ namespace sudoku3
                                        new Point(X +  board.cellwidth, Y +  board.cellwidth), 
                                        new Point(X, Y +  board.cellwidth) };
 
-            if (!this.correct)
+            if (!this.correct && this.editable)
             {
                 e.FillPolygon(Brushes.OrangeRed, p);
             }
@@ -56,7 +56,6 @@ namespace sudoku3
                 e.FillPolygon(Brushes.LightBlue, p);
             }
             
-
             e.DrawPolygon(form.pen, p);
 
             //почему именно такие +7 и прочее? просто потому что блять (мб проблема в width)
@@ -65,44 +64,71 @@ namespace sudoku3
 
         public bool check_correctness()
         {
-            for(int i = 0; i < Board.N; i++)
+            Console.WriteLine($"Проверяю {this.value} в координатах {xb},{yb}: ");
+            for (int i = 0; i < Board.N; i++)
             {
-
-                int x = (xb / 3) * 3 + i % 3;
-                int y = (yb / 3) * 3 + i / 3;
-                //board.cells[x, y].value = "A";
-                //form.Invalidate();
-                Console.WriteLine(x + " " + y);
-                if (x == xb || y == yb)
-                {
-                    continue;
-                }
-                if (board.cells[y,x].value == this.value)
-                {
-                    Console.WriteLine("BBBBBB");
-                    Console.WriteLine(x + " " + y);
+                if(!check_block(i)) { 
                     return false;
                 }
-
-                /*if (i == xb || i == yb)
-                {
-                    continue;
-                }
-                if (board.cells[i, yb].value == this.value)
-                {
-                    Console.WriteLine("AAAAAA");
-                    Console.WriteLine(i + " " + yb);
+                if(!check_lines(i)) {
                     return false;
                 }
-                if (board.cells[xb, i].value == this.value)
-                {
-                    Console.WriteLine("CCCCCC");
-                    Console.WriteLine(xb + " " + i);
-                    return false;
-                }*/
+                
             }
-            //Console.WriteLine(xb + " " + yb);
+
             Console.WriteLine();
+            return true;
+        }
+
+        public bool check_block(int i)
+        {
+            int x = (xb / 3) * 3 + i % 3;
+            int y = (yb / 3) * 3 + i / 3;
+            //board.cells[x, y].value = "A";
+            //form.Invalidate();
+            Console.WriteLine($"Сейчас буду смотреть {board.cells[x, y].value} по {x},{y}");
+            //Console.WriteLine(x + " " + y);
+            //Console.WriteLine(board.cells[x,y].value);
+            if (x == xb && y == yb)
+            {
+                Console.WriteLine("Ой, это та же клетка");
+                //continue;
+                return true;
+            }
+            if (board.cells[x, y].value == this.value)
+            {
+                Console.WriteLine("Нашел повторение! в блоке");
+                Console.WriteLine();
+                return false;
+            }
+            else
+            {
+                Console.WriteLine("Oк! Порядок\n");
+            }
+
+            return true;
+        }
+
+        public bool check_lines(int i)
+        {
+            if (i == xb || i == yb)
+            {
+                //continue;
+                return true;
+            }
+            if (board.cells[i, yb].value == this.value)
+            {
+                Console.WriteLine("линия");
+                Console.WriteLine(i + " " + yb);
+                return false;
+            }
+            if (board.cells[xb, i].value == this.value)
+            {
+                Console.WriteLine("столбик");
+                Console.WriteLine(xb + " " + i);
+                return false;
+            }
+
             return true;
         }
     }
