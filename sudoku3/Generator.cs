@@ -118,7 +118,7 @@ namespace sudoku3
 
         static private void clear_random_cells(Cell[,] cells)
         {
-            int M = 17;
+            int M = 25;
             Random random = new Random();
             for(int i = 0; i < M; i++)
             {

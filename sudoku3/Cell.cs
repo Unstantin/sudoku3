@@ -67,7 +67,24 @@ namespace sudoku3
         {
             for(int i = 0; i < Board.N; i++)
             {
-                if (i == xb || i == yb)
+
+                int x = (xb / 3) * 3 + i % 3;
+                int y = (yb / 3) * 3 + i / 3;
+                //board.cells[x, y].value = "A";
+                //form.Invalidate();
+                Console.WriteLine(x + " " + y);
+                if (x == xb || y == yb)
+                {
+                    continue;
+                }
+                if (board.cells[y,x].value == this.value)
+                {
+                    Console.WriteLine("BBBBBB");
+                    Console.WriteLine(x + " " + y);
+                    return false;
+                }
+
+                /*if (i == xb || i == yb)
                 {
                     continue;
                 }
@@ -79,13 +96,13 @@ namespace sudoku3
                 }
                 if (board.cells[xb, i].value == this.value)
                 {
-                    Console.WriteLine("AAAAAA");
+                    Console.WriteLine("CCCCCC");
                     Console.WriteLine(xb + " " + i);
                     return false;
-                }
-
+                }*/
             }
-            Console.WriteLine(xb + " " + yb);
+            //Console.WriteLine(xb + " " + yb);
+            Console.WriteLine();
             return true;
         }
     }
