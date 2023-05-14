@@ -10,9 +10,10 @@ namespace sudoku3
 {
     public class Cell
     {
-        static Font drawFont = new Font("Arial", 20);
-        static SolidBrush drawBrush = new SolidBrush(Color.Black);
-        static StringFormat drawFormat = new StringFormat();
+        Font drawFont = new Font("Arial", 20);
+        SolidBrush drawBrush_non_edit = new SolidBrush(Color.White);
+        SolidBrush drawBrush_edit = new SolidBrush(Color.Black);
+        StringFormat drawFormat = new StringFormat();
 
         public Form1 form;
         public Board board;
@@ -57,30 +58,37 @@ namespace sudoku3
             }
             else if (this.editable)
             {
-                e.FillPolygon(Brushes.LightBlue, p);
+                Brush brush = new SolidBrush(form.editable_cells_color);
+                e.FillPolygon(brush, p);
             }
             
             e.DrawPolygon(form.pen, p);
 
             //почему именно такие +7 и прочее? просто потому что блять (мб проблема в width)
-            e.DrawString(value, drawFont, drawBrush, X + board.cellwidth / 4 + 9, Y + board.cellwidth / 4 + 4, drawFormat);
+            if(!this.editable)
+            {
+                e.DrawString(value, drawFont, drawBrush_non_edit, X + board.cellwidth / 4 + 9,
+                    Y + board.cellwidth / 4 + 4, drawFormat);
+            } else
+            {
+                e.DrawString(value, drawFont, drawBrush_edit, X + board.cellwidth / 4 + 9, 
+                    Y + board.cellwidth / 4 + 4, drawFormat);
+            }
         }
 
         public bool check_correctness()
         {
-            Console.WriteLine($"Проверяю {this.value} в координатах {xb},{yb}: ");
             for (int i = 0; i < Board.N; i++)
             {
-                if(!check_block(i)) { 
+                if(!check_block(i))
+                {
                     return false;
                 }
-                if(!check_lines(i)) {
+                if(!check_lines(i))
+                {
                     return false;
                 }
-                
             }
-
-            Console.WriteLine();
             return true;
         }
 
@@ -88,26 +96,13 @@ namespace sudoku3
         {
             int x = (xb / 3) * 3 + i % 3;
             int y = (yb / 3) * 3 + i / 3;
-            //board.cells[x, y].value = "A";
-            //form.Invalidate();
-            Console.WriteLine($"Сейчас буду смотреть {board.cells[x, y].value} по {x},{y}");
-            //Console.WriteLine(x + " " + y);
-            //Console.WriteLine(board.cells[x,y].value);
             if (x == xb && y == yb)
             {
-                Console.WriteLine("Ой, это та же клетка");
-                //continue;
                 return true;
             }
             if (board.cells[x, y].value == this.value)
             {
-                Console.WriteLine("Нашел повторение! в блоке");
-                Console.WriteLine();
                 return false;
-            }
-            else
-            {
-                Console.WriteLine("Oк! Порядок\n");
             }
 
             return true;
@@ -117,23 +112,10 @@ namespace sudoku3
         {
             if (i == xb || i == yb)
             {
-                //continue;
                 return true;
             }
-            if (board.cells[i, yb].value == this.value)
-            {
-                Console.WriteLine("линия");
-                Console.WriteLine(i + " " + yb);
-                return false;
-            }
-            if (board.cells[xb, i].value == this.value)
-            {
-                Console.WriteLine("столбик");
-                Console.WriteLine(xb + " " + i);
-                return false;
-            }
 
-            return true;
+            return !(board.cells[i, yb].value == this.value) && !(board.cells[xb, i].value == this.value);
         }
 
         public void color_cells(Graphics e, Point[] p)

@@ -19,6 +19,7 @@ namespace sudoku3
         public Cell[,] cells;
         public Cell active_cell = null;
         public int empty_cells_n = 0;
+        public int mistake_cells_n = 0;
 
         public int width;
         public int cellwidth;
@@ -61,10 +62,10 @@ namespace sudoku3
             for(int i = 0; i < 4; i++)
             {
                 //почему именно такие +1 -2 и прочее? просто потому что блять (мб проблема в width)
-                e.DrawLine(new Pen(Color.FromArgb(0, 0, 0), 5), 
+                e.DrawLine(new Pen(form.board_color, 7), 
                            new Point(X - 2, Y + cellwidth*3*i), 
                            new Point(X + width + 3, Y + cellwidth * 3 * i));
-                e.DrawLine(new Pen(Color.FromArgb(0, 0, 0), 5), 
+                e.DrawLine(new Pen(form.board_color, 7),
                            new Point(X + cellwidth*3*i, Y), 
                            new Point(X + cellwidth*3*i, Y + width + 3));
             }
@@ -90,8 +91,25 @@ namespace sudoku3
             foreach(Cell c in cells)
             {
                 if(c.editable == false) { continue; }
-                if(c.value == "") { continue; }
+                if((c.value == "") && (c.correct == false)) {mistake_cells_n--; 
+                    c.correct = true; 
+                    continue; 
+                }
+                if(c.value == "")
+                {
+                    continue;
+                }
+
+                bool c_cor = c.correct;
                 c.correct = c.check_correctness();
+                if ((c_cor == false) && (c.correct != false))
+                {
+                    mistake_cells_n--;
+                }
+                if((c_cor == true) && (c.correct != true))
+                {
+                    mistake_cells_n++;
+                }
             }
             form.Invalidate();
         }
