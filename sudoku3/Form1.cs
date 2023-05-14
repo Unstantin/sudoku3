@@ -171,8 +171,9 @@ namespace sudoku3
                     }
                     board.active_cell.value = b.Text;
                     int mnb = board.mistake_cells_n;
+                    bool cor = board.active_cell.correct;
                     board.check_all_cells_for_mistake();
-                    if(mnb <= board.mistake_cells_n)
+                    if((mnb < board.mistake_cells_n) || (cor == false && board.active_cell.correct == false))
                     {
                         player.lives--;
                         if(player.lives == 0)
