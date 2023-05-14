@@ -49,44 +49,16 @@ namespace sudoku3
                                        new Point(X +  board.cellwidth, Y +  board.cellwidth), 
                                        new Point(X, Y +  board.cellwidth) };
 
-            switch(block_color)
-            {
-                case 0:
-                    e.FillPolygon(Brushes.Gold, p);
-                    break;
-                case 1:
-                    e.FillPolygon(Brushes.Orange, p);
-                    break;
-                case 2:
-                    e.FillPolygon(Brushes.LawnGreen, p);
-                    break;
-                case 3:
-                    e.FillPolygon(Brushes.LightPink, p);
-                    break;
-                case 4:
-                    e.FillPolygon(Brushes.Tan, p);
-                    break;
-                case 5:
-                    e.FillPolygon(Brushes.Thistle, p);
-                    break;
-                case 6:
-                    e.FillPolygon(Brushes.Plum, p);
-                    break;
-                case 7:
-                    e.FillPolygon(Brushes.OliveDrab, p);
-                    break;
-                case 8:
-                    e.FillPolygon(Brushes.MintCream, p);
-                    break;
-            }
-            /*if (!this.correct && this.editable)
+            //color_cells(e, p);
+
+            if (!this.correct && this.editable)
             {
                 e.FillPolygon(Brushes.OrangeRed, p);
             }
             else if (this.editable)
             {
                 e.FillPolygon(Brushes.LightBlue, p);
-            }*/
+            }
             
             e.DrawPolygon(form.pen, p);
 
@@ -162,6 +134,40 @@ namespace sudoku3
             }
 
             return true;
+        }
+
+        public void color_cells(Graphics e, Point[] p)
+        {
+            switch (block_color)
+            {
+                case 0:
+                    e.FillPolygon(Brushes.Gold, p);
+                    break;
+                case 1:
+                    e.FillPolygon(Brushes.Orange, p);
+                    break;
+                case 2:
+                    e.FillPolygon(Brushes.LawnGreen, p);
+                    break;
+                case 3:
+                    e.FillPolygon(Brushes.LightPink, p);
+                    break;
+                case 4:
+                    e.FillPolygon(Brushes.Tan, p);
+                    break;
+                case 5:
+                    e.FillPolygon(Brushes.Thistle, p);
+                    break;
+                case 6:
+                    e.FillPolygon(Brushes.Plum, p);
+                    break;
+                case 7:
+                    e.FillPolygon(Brushes.OliveDrab, p);
+                    break;
+                case 8:
+                    e.FillPolygon(Brushes.MintCream, p);
+                    break;
+            }
         }
     }
 }

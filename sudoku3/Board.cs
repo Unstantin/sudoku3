@@ -45,10 +45,6 @@ namespace sudoku3
 
             Generator.classic(cells);
             //ColorGenerator.color(cells);
-            foreach(Cell c in cells)
-            {
-                c.editable = true;
-            }
         }
 
         public void draw(Graphics e)
