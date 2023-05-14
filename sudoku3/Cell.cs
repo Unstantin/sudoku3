@@ -27,6 +27,8 @@ namespace sudoku3
         public int xb;
         public int yb;
 
+        public int block_color;
+
         public Cell(string value, Board board, int X, int Y, int xb, int yb) { 
             this.value = value;
 
@@ -47,14 +49,44 @@ namespace sudoku3
                                        new Point(X +  board.cellwidth, Y +  board.cellwidth), 
                                        new Point(X, Y +  board.cellwidth) };
 
-            if (!this.correct && this.editable)
+            switch(block_color)
+            {
+                case 0:
+                    e.FillPolygon(Brushes.Gold, p);
+                    break;
+                case 1:
+                    e.FillPolygon(Brushes.Orange, p);
+                    break;
+                case 2:
+                    e.FillPolygon(Brushes.LawnGreen, p);
+                    break;
+                case 3:
+                    e.FillPolygon(Brushes.LightPink, p);
+                    break;
+                case 4:
+                    e.FillPolygon(Brushes.Tan, p);
+                    break;
+                case 5:
+                    e.FillPolygon(Brushes.Thistle, p);
+                    break;
+                case 6:
+                    e.FillPolygon(Brushes.Plum, p);
+                    break;
+                case 7:
+                    e.FillPolygon(Brushes.OliveDrab, p);
+                    break;
+                case 8:
+                    e.FillPolygon(Brushes.MintCream, p);
+                    break;
+            }
+            /*if (!this.correct && this.editable)
             {
                 e.FillPolygon(Brushes.OrangeRed, p);
             }
             else if (this.editable)
             {
                 e.FillPolygon(Brushes.LightBlue, p);
-            }
+            }*/
             
             e.DrawPolygon(form.pen, p);
 
