@@ -8,15 +8,16 @@ using System.Threading.Tasks;
 
 namespace sudoku3
 {
+    [Serializable]
     public class Cell
     {
-        Font drawFont = new Font("Arial", 20);
-        SolidBrush drawBrush_non_edit = new SolidBrush(Color.White);
-        SolidBrush drawBrush_edit = new SolidBrush(Color.Black);
-        StringFormat drawFormat = new StringFormat();
+        [NonSerialized] Font drawFont = new Font("Arial", 20);
+        [NonSerialized] SolidBrush drawBrush_non_edit = new SolidBrush(Color.White);
+        [NonSerialized] SolidBrush drawBrush_edit = new SolidBrush(Color.Black);
+        [NonSerialized] StringFormat drawFormat = new StringFormat();
 
-        public Form1 form;
-        public Board board;
+        [NonSerialized] public Form1 form;
+        [NonSerialized] public Board board;
 
         public bool editable = false;
         public bool correct = true;
@@ -29,6 +30,20 @@ namespace sudoku3
         public int yb;
 
         public int block_color;
+
+        public Cell(Cell saved_cell, Form1 form, Board board)
+        {
+            this.form = form;
+            this.board = board;
+            editable = saved_cell.editable;
+            correct = saved_cell.correct;
+            value = saved_cell.value;
+            X = saved_cell.X;
+            Y = saved_cell.Y;
+            xb = saved_cell.xb;
+            yb = saved_cell.yb;
+            block_color = saved_cell.block_color;
+        }
 
         public Cell(string value, Board board, int X, int Y, int xb, int yb) { 
             this.value = value;
@@ -64,7 +79,7 @@ namespace sudoku3
             
             e.DrawPolygon(form.pen, p);
 
-            //почему именно такие +7 и прочее? просто потому что блять (мб проблема в width)
+            //почему именно такие +7 и прочее? просто потому что (мб проблема в width)
             if(!this.editable)
             {
                 e.DrawString(value, drawFont, drawBrush_non_edit, X + board.cellwidth / 4 + 9,

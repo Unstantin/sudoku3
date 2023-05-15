@@ -11,23 +11,74 @@ using System.Windows.Markup;
 
 namespace sudoku3
 {
+    [Serializable]
     public class Board
     {
-        public Form1 form;
+        [NonSerialized] public Form1 form;
 
-        public static int N = 9;
+        [NonSerialized] public static int N = 9;
+        public enum MODES
+        {
+            CLASSIC
+        }
+
         public Cell[,] cells;
         public Cell active_cell = null;
         public int empty_cells_n = 0;
         public int mistake_cells_n = 0;
+
+        public MODES mode;
+
+        public bool saved = false;
+        public int save_index;
 
         public int width;
         public int cellwidth;
         public int X;
         public int Y;
 
-        public Board(Form1 form)
+        public Board(Board saved_board, Form1 form)
         {
+            this.mode = saved_board.mode;
+            this.form = form;
+            this.width = saved_board.width;
+            this.cellwidth = saved_board.cellwidth;
+            this.active_cell= saved_board.active_cell;
+            this.saved = saved_board.saved;
+            this.save_index = saved_board.save_index;
+            this.empty_cells_n = saved_board.empty_cells_n;
+            this.mistake_cells_n = saved_board.mistake_cells_n;
+
+            this.X = saved_board.X;
+            this.Y = saved_board.Y;
+
+            cells = new Cell[N, N];
+            for (int i = 0; i < N; i++)
+            {
+                for (int j = 0; j < N; j++)
+                {
+                    /*cells[j, i] = new Cell(
+                        saved_board.cells[j,i].value, 
+                        this,
+                        saved_board.cells[j, i].X,
+                        saved_board.cells[j, i].Y,
+                        saved_board.cells[j, i].xb,
+                        saved_board.cells[j, i].yb
+                        );*/
+                    cells[j, i] = new Cell(
+                        saved_board.cells[j, i],
+                        form, this
+                    );
+                }
+            }
+
+            form.saved_boards.Remove(save_index);
+            form.saved_boards.Add(save_index, this);
+        }
+
+        public Board(Form1 form, MODES mode)
+        {
+            this.mode = mode;
             this.form = form;
             this.width = Convert.ToInt32(form.ClientSize.Height * 0.7);
             this.cellwidth = width / N;

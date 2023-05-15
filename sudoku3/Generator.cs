@@ -130,17 +130,17 @@ namespace sudoku3
     }
 
     //бесконечный цикл из-за того, что у блоков может и не быть рядом никаких клеток (см для программы)
-    internal class ColorGenerator
+    public class ColorGenerator
     {
-        static List<(int, int)>[] blocks;
-        static int Mi = 3;
+        List<(int, int)>[] blocks;
+        int Mi = 3;
 
-        static List<(int, int, int, int)> already_checked_pairs_cells = new List<(int, int, int, int)>();
+        List<(int, int, int, int)> already_checked_pairs_cells = new List<(int, int, int, int)>();
 
-        static int block_integrity_n;
-        static List<(int, int)> already_checked_cells_integrity;
+        int block_integrity_n;
+        List<(int, int)> already_checked_cells_integrity;
 
-        static public void color(Cell[,] cells)
+        public void color(Cell[,] cells)
         {
             Console.WriteLine("ГЕНЕРАЦИЯ НАЧАЛАСЬ!");
             Console.ReadLine();
@@ -171,7 +171,7 @@ namespace sudoku3
             }
         }
 
-        static public void Init()
+        void Init()
         {
             blocks = new List<(int, int)>[9];
             for (int i = 0; i < 9; i++)
@@ -186,7 +186,7 @@ namespace sudoku3
             }
         }
 
-        static public void create_blocks()
+        void create_blocks()
         {
             int[] blocks_which_will_mix = new int[] { 0, 2, 4, 6, 8 };
             foreach (int i in blocks_which_will_mix)
@@ -197,7 +197,7 @@ namespace sudoku3
                     int n2;
                     n2 = mix(i);
                     //Console.WriteLine("Щас проверим можно ли так поменять");
-                    if (!ColorGenerator.check_integrity(blocks[i]) || !ColorGenerator.check_integrity(blocks[n2]))
+                    if (!this.check_integrity(blocks[i]) || !this.check_integrity(blocks[n2]))
                     {
                         Console.WriteLine("Нельзя так поменять");
 
@@ -216,7 +216,7 @@ namespace sudoku3
             }
         }
 
-        static public int mix(int n)
+        int mix(int n)
         {
             Random random = new Random();
             int r;
@@ -289,7 +289,7 @@ namespace sudoku3
             return n2;
         }
 
-        static public void mix_two(int n1, int n2)
+        void mix_two(int n1, int n2)
         {
             Console.WriteLine($"ПЕРЕМЕШИВАЮ БЛОК {n1} и {n2}");
             //Console.ReadLine();
@@ -336,7 +336,7 @@ namespace sudoku3
             Console.WriteLine($"ПОМЕНЯЛ МЕСТАМИ {x1},{y1} и {x2},{y2}");
         }
 
-        static bool check_integrity(List<(int,int)> block)
+        bool check_integrity(List<(int,int)> block)
         {
             block_integrity_n = 0;
             already_checked_cells_integrity = new List<(int, int)>();
@@ -347,7 +347,7 @@ namespace sudoku3
             return block_integrity_n == 9;
         }
 
-        static void check_neighbors((int,int) cell, List<(int,int)> block)
+        void check_neighbors((int,int) cell, List<(int,int)> block)
         {
             if(already_checked_cells_integrity.Contains(cell))
             {
