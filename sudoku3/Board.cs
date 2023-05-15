@@ -44,7 +44,7 @@ namespace sudoku3
                 }
             }
 
-            Generator.classic(cells);
+            form.generator.classic(cells);
             //ColorGenerator.color(cells);
         }
 
@@ -61,10 +61,10 @@ namespace sudoku3
         {
             for(int i = 0; i < 4; i++)
             {
-                //почему именно такие +1 -2 и прочее? просто потому что блять (мб проблема в width)
+                //почему именно такие +1 -2 и прочее? просто потому что (мб проблема в width)
                 e.DrawLine(new Pen(form.board_color, 7), 
-                           new Point(X - 2, Y + cellwidth*3*i), 
-                           new Point(X + width + 3, Y + cellwidth * 3 * i));
+                           new Point(X - 4, Y + cellwidth*3*i), 
+                           new Point(X + width + 4, Y + cellwidth * 3 * i));
                 e.DrawLine(new Pen(form.board_color, 7),
                            new Point(X + cellwidth*3*i, Y), 
                            new Point(X + cellwidth*3*i, Y + width + 3));
@@ -91,7 +91,8 @@ namespace sudoku3
             foreach(Cell c in cells)
             {
                 if(c.editable == false) { continue; }
-                if((c.value == "") && (c.correct == false)) {mistake_cells_n--; 
+                if((c.value == "") && (c.correct == false)) {
+                    mistake_cells_n--; 
                     c.correct = true; 
                     continue; 
                 }
@@ -112,6 +113,25 @@ namespace sudoku3
                 }
             }
             form.Invalidate();
+        }
+
+        public void print()
+        {
+            for(int i = 0; i < N; i++)
+            {
+                for(int j = 0; j < N; j++)
+                {
+                    if (cells[j,i].value == "")
+                    {
+                        Console.Write(" ");
+                    }
+                    Console.Write(cells[j, i].value + " ");
+
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+            Console.WriteLine();
         }
     }
 }

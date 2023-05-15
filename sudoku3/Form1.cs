@@ -23,9 +23,10 @@ namespace sudoku3
 
         public Player player;
         public Board board;
+        public Generator generator;
 
         public Button button_start;
-        public Button button_quit;
+        public Button_quit button_quit;
 
         public Button[] decision_buttons;
         public TableLayoutPanel decision_panel;
@@ -109,12 +110,15 @@ namespace sudoku3
                 if(e.KeyValue == 13)
                 {
                     MODULE_ACTIVE = MODULES_ACTIVE.MENU;
+                    this.Controls.Clear();
+                    create_menu_ui();
                 }
             }
         }
 
         private void button_start_click(object sender, EventArgs e)
         {
+            generator = new Generator();
             board = new Board(this);
             button_start.Dispose();
             player.lives = 3;
@@ -285,8 +289,8 @@ namespace sudoku3
         }
 
         public void create_menu_ui()
-        {
-            button_quit = new Button();
+        { 
+            button_quit = new Button_quit();
             button_quit.Click += button_quit_Click;
             button_quit.Text = "бширх";
             button_quit.Width = 100;
@@ -309,5 +313,20 @@ namespace sudoku3
     public class Player {
         public int lives;
         public long solution_time_sec;
+    }
+
+    public class Button_quit : Button {
+        protected override bool IsInputKey(Keys keyData)
+        {
+            if (keyData == Keys.Space)
+            {
+                return true;
+            }
+            if (keyData == Keys.Enter)
+            {
+                return true;
+            }
+            return base.IsInputKey(keyData);
+        }
     }
 }

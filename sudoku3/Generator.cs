@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace sudoku3
 {
-    internal class Generator
+    public class Generator
     {
-        public static int?[,] BASE =
+        public int?[,] base_sudoku =
             {{1,2,3,4,5,6,7,8,9},
              {4,5,6,7,8,9,1,2,3},
              {7,8,9,1,2,3,4,5,6},
@@ -22,9 +22,7 @@ namespace sudoku3
              {6,7,8,9,1,2,3,4,5},
              {9,1,2,3,4,5,6,7,8}};
 
-        static int?[,] base_sudoku = BASE;
-
-        static public void classic(Cell[,] cells)
+        public void classic(Cell[,] cells)
         {
             int N = 15;
             Random random = new Random();
@@ -57,7 +55,7 @@ namespace sudoku3
             }
         }
 
-        static private void swap_colums_or_rows(int mode)
+        private void swap_colums_or_rows(int mode)
         {
             Random r = new Random();
             int block =  r.Next() % 3;
@@ -81,7 +79,7 @@ namespace sudoku3
             }
         }
 
-        static private void swap_blocks(int mode)
+        private void swap_blocks(int mode)
         {
             Random r = new Random();
             int block1 = r.Next() % 3;
@@ -110,7 +108,7 @@ namespace sudoku3
             }
         }
 
-        static private void clear_random_cells(Cell[,] cells)
+        private void clear_random_cells(Cell[,] cells)
         {
             int M = 25;
             Random random = new Random();
