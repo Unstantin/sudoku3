@@ -321,7 +321,7 @@ namespace sudoku3
         public void end_of_game(int result)
         {
             destroy_krossvord_ui();
-            if(!decision_panel.IsDisposed)
+            if(decision_panel != null && !decision_panel.IsDisposed)
             {
                 decision_panel.Dispose();
             }
