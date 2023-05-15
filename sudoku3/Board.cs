@@ -57,14 +57,6 @@ namespace sudoku3
             {
                 for (int j = 0; j < N; j++)
                 {
-                    /*cells[j, i] = new Cell(
-                        saved_board.cells[j,i].value, 
-                        this,
-                        saved_board.cells[j, i].X,
-                        saved_board.cells[j, i].Y,
-                        saved_board.cells[j, i].xb,
-                        saved_board.cells[j, i].yb
-                        );*/
                     cells[j, i] = new Cell(
                         saved_board.cells[j, i],
                         form, this
