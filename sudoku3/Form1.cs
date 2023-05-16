@@ -50,6 +50,7 @@ namespace sudoku3
         public Label label_res;
         public Label label_time;
         public Label label_instr;
+        public Label lable_index_save;
 
         public Form1()
         {
@@ -113,7 +114,7 @@ namespace sudoku3
                     {
                         return;
                     }
-                    if (board.active_cell != null)
+                    if (board.active_cell != null && decision_panel != null)
                     {
                         decision_panel.Dispose();
                     }
@@ -166,7 +167,7 @@ namespace sudoku3
             board = new Board(this, Board.MODES.CLASSIC);
             destroy_menu_ui();
             create_krossvord_ui();
-            player.lives = 3;
+            board.lives = 3;
             Invalidate();
             MODULE_ACTIVE = MODULES_ACTIVE.KROSSVORD;
             watch.Start();
@@ -174,7 +175,8 @@ namespace sudoku3
 
         public void button_statistics_click(object sender, EventArgs e)
         {
-
+            destroy_menu_ui();
+            create_statistics_ui();
         }
 
         public void button_saved_sudoku_click(object sender, EventArgs e)
@@ -193,11 +195,31 @@ namespace sudoku3
         {
             if(listbox_saved_sudoku.SelectedItem != null)
             {
-                this.board = new Board(saved_boards[(int)listbox_saved_sudoku.SelectedItem], this);
+                string number = "";
+                bool search = true;
+                foreach(char c in (string)listbox_saved_sudoku.SelectedItem)
+                {
+                    if(search)
+                    {
+                        if (c == '#')
+                        {
+                            search = false;
+                        }
+                    } else
+                    {
+                        if(c == '#')
+                        {
+                            break;
+                        }
+                        number += c;
+                    }
+                }
+                this.board = new Board(saved_boards[Convert.ToInt32(number)], this);
                 destroy_saved_sudoku_ui();
                 create_krossvord_ui();
                 Invalidate();
                 MODULE_ACTIVE = MODULES_ACTIVE.KROSSVORD;
+                watch.Start();
             }
         }
 
@@ -272,8 +294,8 @@ namespace sudoku3
                     board.check_all_cells_for_mistake();
                     if ((mnb < board.mistake_cells_n) || (cor == false && board.active_cell.correct == false))
                     {
-                        player.lives--;
-                        if (player.lives == 0)
+                        board.lives--;
+                        if (board.lives == 0)
                         {
                             end_of_game(0);
                         }
@@ -297,7 +319,7 @@ namespace sudoku3
 
             int offsetH = (int)(this.ClientSize.Height * 0.075);
 
-            for (int i = 0; i < player.lives; i++)
+            for (int i = 0; i < board.lives; i++)
             {
                 int X = offsetW + i * (paddingW + live_sizeW);
                 int Y = offsetH;
@@ -320,6 +342,7 @@ namespace sudoku3
 
         public void end_of_game(int result)
         {
+            watch.Stop();
             destroy_krossvord_ui();
             if(decision_panel != null && !decision_panel.IsDisposed)
             {
@@ -327,14 +350,20 @@ namespace sudoku3
             }
             Invalidate();
             MODULE_ACTIVE = MODULES_ACTIVE.END_OF_GAME;
-            watch.Stop();
-            player.solution_time_sec = watch.ElapsedMilliseconds;
+            board.solution_time_sec += watch.ElapsedMilliseconds;
+            watch.Reset();
 
             switch (result)
             {
                 case 0: // ÔÓ‡ÊÂÌËÂ
+                    saved_boards.Remove(board.save_index);
+                    File.Delete($"savings/save{board.save_index}.dat");
+                    player.saves_n--;
                     break;
                 case 1: // ÔÓ·Â‰‡
+                    saved_boards.Remove(board.save_index);
+                    File.Delete($"savings/save{board.save_index}.dat");
+                    player.saves_n--;
                     break;
                 case 2: // ÒÓı‡ÌÂÌËÂ
                     BinaryFormatter formatter = new BinaryFormatter();
@@ -346,7 +375,13 @@ namespace sudoku3
                         }
                     } else
                     {
-                        board.save_index = player.saves_n;
+                        int index = 0;
+                        while(File.Exists($"savings/save{index}.dat"))
+                        {
+                            index++;
+                        }
+                        
+                        board.save_index = index;
                         board.saved = true;
                         using (FileStream fs = new FileStream($"savings/save{player.saves_n}.dat", FileMode.Create, FileAccess.Write))
                         {
@@ -354,10 +389,9 @@ namespace sudoku3
                         }
                         player.saves_n++;
                     }
-                    load_savings();
                     break;
             }
-
+            load_savings();
             create_end_ui(result);
         }
 
@@ -365,11 +399,12 @@ namespace sudoku3
         {
             BinaryFormatter formatter = new BinaryFormatter();
             saved_boards = new Dictionary<int,Board>();
-            for (int i = 0; i < player.saves_n; i++)
+            foreach(string file in Directory.EnumerateFiles("savings", "*", SearchOption.AllDirectories))
             {
-                FileStream savings = new FileStream($"savings/save{i}.dat", FileMode.Open, FileAccess.Read);
-                saved_boards.Add(i, (Board)formatter.Deserialize(savings));
-                savings.Close();
+                FileStream saving = new FileStream(file, FileMode.Open, FileAccess.Read);
+                Board save_b = (Board)formatter.Deserialize(saving);
+                saved_boards.Add(save_b.save_index, save_b);
+                saving.Close();
             }
         }
 
@@ -397,7 +432,7 @@ namespace sudoku3
 
             foreach(KeyValuePair<int,Board> save in saved_boards)
             {
-                listbox_saved_sudoku.Items.Add(save.Value.save_index);
+                listbox_saved_sudoku.Items.Add($"—Œ’–¿Õ≈Õ»≈ #{save.Value.save_index}# | –≈∆»Ã: {save.Value.mode}");
             }
 
             this.Controls.Add(listbox_saved_sudoku);
@@ -424,6 +459,11 @@ namespace sudoku3
             this.Controls.Add(button_escape);
         }
 
+        public void create_statistics_ui()
+        {
+
+        }
+
         public void create_end_ui(int result)
         {
             Color[] colors = { Color.DarkRed, Color.YellowGreen, Color.DimGray };
@@ -443,10 +483,10 @@ namespace sudoku3
             this.Controls.Add(label_res);
 
             label_time = new Label();
-            long min = watch.ElapsedMilliseconds / 1000 / 60;
-            long sec = watch.ElapsedMilliseconds / 1000 % 60;
+            long min = board.solution_time_sec / 1000 / 60;
+            long sec = board.solution_time_sec / 1000 % 60;
             label_time.Text = $"¬¿ÿ≈ ¬–≈Ãﬂ: {min} ÏËÌ {sec} ÒÂÍ\n" +
-                        $" ŒÀ»◊≈—“¬Œ Œÿ»¡Œ : {3 - player.lives}";
+                        $" ŒÀ»◊≈—“¬Œ Œÿ»¡Œ : {3 - board.lives}";
             label_time.AutoSize = true;
             label_time.Width = 200;
             label_time.Height = 300;
@@ -456,6 +496,23 @@ namespace sudoku3
                                      (int)(this.ClientSize.Height * 0.35));
             this.Controls.Add(label_time);
 
+            if(result == 2)
+            {
+                lable_index_save = new Label();
+                lable_index_save.Text = $"—Œ’–¿Õ≈ÕŒ œŒƒ ÕŒÃ≈–ŒÃ {board.save_index}";
+                lable_index_save.AutoSize = true;
+                lable_index_save.Width = 500;
+                lable_index_save.BackColor = bg_color;
+                lable_index_save.ForeColor = Color.FromArgb(100, 100, 100);
+                lable_index_save.Font = instr_font;
+                lable_index_save.Location = new Point(
+                    (int)((this.ClientSize.Width - lable_index_save.Width) / 2),
+                    (int)(this.ClientSize.Height * 0.68)
+                    );
+
+                this.Controls.Add(lable_index_save);
+            }
+
             label_instr = new Label();
             label_instr.Text = "Õ¿∆Ã»“≈ ENTER ƒÀﬂ œ–ŒƒŒÀ∆≈Õ»ﬂ";
             label_instr.AutoSize = true;
@@ -463,8 +520,10 @@ namespace sudoku3
             label_instr.ForeColor = Color.FromArgb(100, 100, 100);
             label_instr.BackColor = bg_color;
             label_instr.Font = instr_font;
-            label_instr.Location = new Point((int)((this.ClientSize.Width - label_instr.Width) / 2),
-                                       (int)(this.ClientSize.Height * 0.8));
+            label_instr.Location = new Point(
+                  (int)((this.ClientSize.Width - label_instr.Width) / 2),
+                  (int)(this.ClientSize.Height * 0.8)
+                  );
             this.Controls.Add(label_instr);
         }
 
@@ -518,6 +577,10 @@ namespace sudoku3
             label_instr.Dispose();
             label_res.Dispose();
             label_time.Dispose();
+            if(!lable_index_save.IsDisposed && lable_index_save != null)
+            {
+                lable_index_save.Dispose();
+            }
         }
 
         public void destroy_saved_sudoku_ui()
@@ -532,9 +595,12 @@ namespace sudoku3
     [Serializable]
     public class Player
     {
-        [NonSerialized] public int lives;
-        [NonSerialized] public long solution_time_sec;
         public int saves_n = 0;
+        public int win_n = 0;
+        public int playes_n = 0;
+        public int best_time = 0;
+        public int win_without_mistakes = 0;
+
     }
 
     public class Button_quit : Button
