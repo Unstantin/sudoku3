@@ -393,7 +393,7 @@ namespace sudoku3
                         
                         board.save_index = index;
                         board.saved = true;
-                        using (FileStream fs = new FileStream($"savings/save{player.saves_n}.dat", FileMode.Create, FileAccess.Write))
+                        using (FileStream fs = new FileStream($"savings/save{board.save_index}.dat", FileMode.Create, FileAccess.Write))
                         {
                             formatter.Serialize(fs, board);
                         }
@@ -430,6 +430,15 @@ namespace sudoku3
                 saved_boards.Add(save_b.save_index, save_b);
                 saving.Close();
             }
+
+
+            Console.WriteLine("SAVED_BOARDS");
+            foreach (KeyValuePair<int, Board> b in saved_boards)
+            {
+                Console.WriteLine(b.Value.save_index);
+                b.Value.print();
+            }
+            Console.WriteLine();
         }
 
         public void create_krossvord_ui()
