@@ -33,7 +33,7 @@ namespace sudoku3
         public int save_index;
 
         public int lives = 3;
-        public long solution_time_sec = 0;
+        public long solution_time = 0;
 
         public int width;
         public int cellwidth;
@@ -52,7 +52,7 @@ namespace sudoku3
             this.empty_cells_n = saved_board.empty_cells_n;
             this.mistake_cells_n = saved_board.mistake_cells_n;
             this.lives = saved_board.lives;
-            this.solution_time_sec = saved_board.solution_time_sec;
+            this.solution_time = saved_board.solution_time;
 
             this.X = saved_board.X;
             this.Y = saved_board.Y;
