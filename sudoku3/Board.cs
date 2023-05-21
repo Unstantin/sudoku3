@@ -15,14 +15,15 @@ namespace sudoku3
     public class Board
     {
         [NonSerialized] public Form1 form;
-
         [NonSerialized] public static int N = 9;
         public enum MODES
         {
-            CLASSIC
+            CLASSIC,
+            KILLER
         }
 
         public Cell[,] cells;
+        public int?[,] solution;
         public Cell active_cell = null;
         public int empty_cells_n = 0;
         public int mistake_cells_n = 0;
@@ -34,6 +35,8 @@ namespace sudoku3
 
         public int lives = 3;
         public long solution_time = 0;
+
+        public List<int> sums_of_areas; //killer
 
         public int width;
         public int cellwidth;
@@ -53,6 +56,8 @@ namespace sudoku3
             this.mistake_cells_n = saved_board.mistake_cells_n;
             this.lives = saved_board.lives;
             this.solution_time = saved_board.solution_time;
+            this.sums_of_areas = saved_board.sums_of_areas;
+            this.solution = saved_board.solution;
 
             this.X = saved_board.X;
             this.Y = saved_board.Y;
@@ -92,7 +97,8 @@ namespace sudoku3
                 }
             }
 
-            form.generator.classic(cells);
+            solution = form.classicGenerator.classic(cells);
+            if (mode == MODES.KILLER) { sums_of_areas = form.killerGenetaror.killer(this); }
             //ColorGenerator.color(cells);
         }
 

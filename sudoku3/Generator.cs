@@ -1,15 +1,18 @@
 ﻿using Microsoft.VisualBasic.ApplicationServices;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms.VisualStyles;
 
 namespace sudoku3
 {
-    public class Generator
+    public class ClassicGenerator
     {
         public int?[,] base_sudoku =
             {{1,2,3,4,5,6,7,8,9},
@@ -22,7 +25,7 @@ namespace sudoku3
              {6,7,8,9,1,2,3,4,5},
              {9,1,2,3,4,5,6,7,8}};
 
-        public void classic(Cell[,] cells)
+        public int?[,] classic(Cell[,] cells)
         {
             int N = 15;
             Random random = new Random();
@@ -37,6 +40,8 @@ namespace sudoku3
                     swap_blocks(random.Next() % 2);
                 }
             }
+
+            int?[,] solution = (int?[,])base_sudoku.Clone();
 
             clear_random_cells(cells);
             
@@ -53,6 +58,8 @@ namespace sudoku3
                     }
                 }
             }
+
+            return solution;
         }
 
         private void swap_colums_or_rows(int mode)
@@ -110,7 +117,16 @@ namespace sudoku3
 
         private void clear_random_cells(Cell[,] cells)
         {
-            int M = 25;
+            int M = 0;
+            if (cells[0,0].board.mode == Board.MODES.CLASSIC)
+            {
+                M = 25;
+            } 
+            else if(cells[0, 0].board.mode == Board.MODES.KILLER)
+            {
+                M = 30;
+            }
+            
             Random random = new Random();
             for(int i = 0; i < M; i++)
             {
@@ -126,6 +142,235 @@ namespace sudoku3
                 base_sudoku[x, y] = null;
                 cells[x, y].editable = true;
             }
+        }
+    }
+
+    public class KillerGenerator
+    {
+        List<List<(int, int)>> areas;
+        List<(int, int)> free_cells;
+        int?[,] area_id_cells = new int?[9, 9];
+        int MAX_N_AREA = 32;
+        int BASE_CELLS_N = 20;
+
+        public void Init()
+        {
+            free_cells = new List<(int, int)>();
+            for(int i = 0; i < 9; i++)
+            {
+                for(int j = 0; j < 9; j++)
+                {
+                    area_id_cells[i, j] = null;
+                    free_cells.Add((i,j));
+                }
+            }
+
+            areas = new List<List<(int, int)>>();
+            Random r = new Random();
+            for (int i = 0; i < BASE_CELLS_N; i++)
+            {
+                int x = r.Next(0, 9);
+                int y = r.Next(0, 9);
+                areas.Add(new List<(int, int)> { (x, y) });
+                area_id_cells[x, y] = i;
+                free_cells.Remove((x, y));
+            }
+        }
+
+        public void part_base_place() {
+            Random r = new Random();
+            for (int i = 0; i < BASE_CELLS_N / 2; i++)
+            {
+                int x = r.Next(0, 9);
+                int y = r.Next(0, 9);
+                areas.Add(new List<(int, int)> { (x, y) });
+                area_id_cells[x, y] = i;
+                free_cells.Remove((x, y));
+            }
+        }
+
+        public List<int> killer(Board board)
+        {
+            List<int> try_k = try_killer(board);
+            while (try_k == null || try_k.Count > 81)
+            {
+                try_k = try_killer(board);
+            }
+            return try_k;
+        }
+
+        public List<int> try_killer(Board board)
+        {
+            Init();
+            Random r = new Random();
+            int cells_n = 0;
+            while (free_cells.Count != 0)
+            {
+                int index = r.Next(free_cells.Count);
+                int res = check_neighbors(free_cells[index], board);
+                if (res == 0)
+                {
+                    areas.Add(new List<(int, int)> { free_cells[index] });
+                    free_cells.RemoveAt(index);
+                    cells_n++;
+                }
+                else if (res == 1)
+                {
+                    free_cells.RemoveAt(index);
+                    cells_n++;
+                }
+
+                if (cells_n + 20 > 81) { return null; }
+                if (areas.Count > MAX_N_AREA) { return null; }
+               
+            }
+            Console.WriteLine(cells_n + 20);
+
+            foreach (List<(int, int)> area in areas)
+            {
+                (int, int) highest = find_highest_in_area(area);
+                board.cells[highest.Item1, highest.Item2].with_area_sum = true;
+                foreach((int,int) cell in area)
+                {
+                    board.cells[cell.Item1, cell.Item2].area_id = areas.IndexOf(area); 
+                }
+            }
+
+            return get_sums_of_areas(board.cells);
+        }
+
+        public List<int> get_sums_of_areas(Cell[,] cells)
+        {
+            List<int> res = new List<int>();
+            int i = 0;
+            foreach(List<(int,int)> area in areas)
+            {
+                res.Add(0);
+                foreach((int,int) coords in area)
+                {
+                    res[i] += Convert.ToInt32(cells[0,0].board.solution[coords.Item1, coords.Item2]);
+                }
+                i++;
+            }
+            return res;
+        }
+
+        public int check_neighbors((int, int) coords, Board board)
+        {
+            List<int> mays = new List<int>();
+
+            bool b0 = false;
+            bool b1 = false;
+            bool b2 = false;
+            bool b3 = false;
+
+            if (coords.Item1 + 1 < 9) 
+            {
+                b0 = area_id_cells[coords.Item1 + 1, coords.Item2] == null;
+                if (!b0) 
+                {
+                    if (!inArea(coords, (coords.Item1 + 1, coords.Item2), board))
+                    {
+                        mays.Add(0);
+                    }
+                }
+            }
+            if (coords.Item2 + 1 < 9)
+            {
+                b1 = area_id_cells[coords.Item1, coords.Item2 + 1] == null;
+                if (!b1)
+                {
+                    if (!inArea(coords, (coords.Item1, coords.Item2 + 1), board))
+                    {
+                        mays.Add(1);
+                    }
+                }
+            }
+            if (coords.Item1 - 1 >= 0) 
+            {
+                b2 = area_id_cells[coords.Item1 - 1, coords.Item2] == null;
+                if (!b2)
+                {
+                    if (!inArea(coords, (coords.Item1 - 1, coords.Item2), board))
+                    {
+                        mays.Add(2);
+                    }
+                }
+            }
+            if (coords.Item2 - 1 >= 0) 
+            {
+                b3 = area_id_cells[coords.Item1, coords.Item2 - 1] == null;
+                if (!b3)
+                {
+                    if (!inArea(coords, (coords.Item1, coords.Item2 - 1), board))
+                    {
+                        mays.Add(3);
+                    }
+                }
+            }
+
+            if(mays.Count == 0)
+            {
+                return 0;
+            }
+
+            if(b0 && b1 & b2 && b3) { return 2; }
+
+            Random r = new Random();
+            int index = r.Next(4);
+            while(!mays.Contains(index))
+            {
+                index = r.Next(4);
+            }
+            if(index == 0) { 
+                areas[(int)area_id_cells[coords.Item1 + 1, coords.Item2]].Add(coords);
+            }
+            else if(index == 1) { 
+                areas[(int)area_id_cells[coords.Item1, coords.Item2 + 1]].Add(coords); 
+            }
+            else if(index == 2) { 
+                areas[(int)area_id_cells[coords.Item1 - 1, coords.Item2]].Add(coords); 
+            }
+            else if(index == 3) { 
+                areas[(int)area_id_cells[coords.Item1, coords.Item2 - 1]].Add(coords); 
+            }
+
+            return 1;
+        }
+
+        public bool inArea((int,int) coords, (int, int) coords_i, Board board)
+        {
+            List<(int, int)> area = areas[(int)area_id_cells[coords_i.Item1, coords_i.Item2]]; // область рассматриваемого соседа
+            int? value = board.solution[coords.Item1, coords.Item2]; //значение рассматриваемой клетки
+            foreach((int,int) coords_in_area in area)
+            {
+                int? value_in_area = board.solution[coords_in_area.Item1, coords_in_area.Item2]; //значение в области
+                if (value_in_area == value)
+                {
+                    return true;
+                } 
+            }
+            return false;
+        }
+
+        public (int,int) find_highest_in_area(List<(int,int)> area)
+        {
+            (int, int) res = area[0];
+            foreach((int,int) coords in area)
+            {
+                if(res.Item2 > coords.Item2)
+                {
+                    res = coords;
+                } else if (res.Item2 == coords.Item2)
+                {
+                    if(res.Item1 > coords.Item1)
+                    {
+                        res = coords;
+                    }
+                }
+            }
+
+            return res;
         }
     }
 

@@ -8,6 +8,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System;
 using System.Runtime.Serialization;
 using Microsoft.VisualBasic;
+using System.Drawing.Configuration;
 
 namespace sudoku3
 {
@@ -17,6 +18,7 @@ namespace sudoku3
         public Pen pen;
         public Color board_color = Color.White;
         public Color editable_cells_color = Color.CadetBlue;
+        public Color decision_panel_killer_color = Color.White;
         public Color bg_color = Color.FromArgb(50, 50, 50);
         public Color additable_color = Color.DarkGray;
 
@@ -24,6 +26,7 @@ namespace sudoku3
         public enum MODULES_ACTIVE : int
         {
             MENU,
+            CHOICE_TYPE,
             KROSSVORD,
             END_OF_GAME,
             SAVED_SUDOKU,
@@ -33,9 +36,12 @@ namespace sudoku3
         public Player player;
         public Board board;
         public Dictionary<int, Board> saved_boards;
-        public Generator generator;
+        public ClassicGenerator classicGenerator;
+        public KillerGenerator killerGenetaror;
 
         public Button button_start;
+        public Button button_classic;
+        public Button button_killer;
         public Button button_start_in_saved_sudoku;
         public Button_quit button_quit;
         public Button button_escape;
@@ -165,9 +171,29 @@ namespace sudoku3
 
         private void button_start_click(object sender, EventArgs e)
         {
-            generator = new Generator();
-            board = new Board(this, Board.MODES.CLASSIC);
             destroy_menu_ui();
+            create_choice_type_sudoku_ui();
+            MODULE_ACTIVE = MODULES_ACTIVE.CHOICE_TYPE;
+        }
+
+        public void button_classic_click(object sender, EventArgs e)
+        {
+            classicGenerator = new ClassicGenerator();
+            board = new Board(this, Board.MODES.CLASSIC);
+            destroy_choice_type_sudoku_ui();
+            create_krossvord_ui();
+            board.lives = 3;
+            Invalidate();
+            MODULE_ACTIVE = MODULES_ACTIVE.KROSSVORD;
+            watch.Start();
+        }
+
+        public void button_killer_click(object sender, EventArgs e)
+        {
+            classicGenerator = new ClassicGenerator();
+            killerGenetaror = new KillerGenerator();
+            board = new Board(this, Board.MODES.KILLER);
+            destroy_choice_type_sudoku_ui();
             create_krossvord_ui();
             board.lives = 3;
             Invalidate();
@@ -251,6 +277,10 @@ namespace sudoku3
             {
                 destroy_statistics_ui();
             }
+            if(MODULE_ACTIVE == MODULES_ACTIVE.CHOICE_TYPE)
+            {
+                destroy_choice_type_sudoku_ui();
+            }
             MODULE_ACTIVE = MODULES_ACTIVE.MENU;
             create_menu_ui();
         }
@@ -276,7 +306,14 @@ namespace sudoku3
                 decision_buttons[i].FlatStyle = FlatStyle.Flat;
                 decision_buttons[i].Width = board.cellwidth / 3;
                 decision_buttons[i].Height = board.cellwidth / 3;
-                decision_buttons[i].BackColor = editable_cells_color;
+                if(board.mode == Board.MODES.CLASSIC)
+                {
+                    decision_buttons[i].BackColor = editable_cells_color;
+                } 
+                else if(board.mode == Board.MODES.KILLER)
+                {
+                    decision_buttons[i].BackColor = decision_panel_killer_color;
+                }
                 decision_buttons[i].FlatAppearance.BorderColor = Color.Black;
                 decision_buttons[i].Click += decision_button_click;
 
@@ -430,15 +467,6 @@ namespace sudoku3
                 saved_boards.Add(save_b.save_index, save_b);
                 saving.Close();
             }
-
-
-            Console.WriteLine("SAVED_BOARDS");
-            foreach (KeyValuePair<int, Board> b in saved_boards)
-            {
-                Console.WriteLine(b.Value.save_index);
-                b.Value.print();
-            }
-            Console.WriteLine();
         }
 
         public void create_krossvord_ui()
@@ -451,6 +479,43 @@ namespace sudoku3
             button_save_sudoku.Click += button_save_sudoku_click;
 
             this.Controls.Add(button_save_sudoku);
+        }
+
+        public void create_choice_type_sudoku_ui()
+        {
+            button_classic = new Button();
+            button_classic.Width = 400;
+            button_classic.Height = 200;
+            button_classic.BackgroundImage = Image.FromFile("classic.png");
+            button_classic.Location = new Point((int)(ClientSize.Width * 0.1),
+                                                (ClientSize.Height - button_classic.Height) / 2);
+            button_classic.Click += button_classic_click;
+
+            this.Controls.Add(button_classic);
+
+            button_killer = new Button();
+            button_killer.Width = 400;
+            button_killer.Height = 200;
+            button_killer.Image = Image.FromFile("killer.png");
+            button_killer.Location = new Point((int)(ClientSize.Width * 0.7),
+                                                (ClientSize.Height - button_classic.Height) / 2);
+            button_killer.Click += button_killer_click;
+
+            this.Controls.Add(button_killer);
+
+            button_escape = new Button();
+            button_escape.Width = 100;
+            button_escape.Height = 50;
+            button_escape.Location = new Point(this.ClientSize.Width - button_quit.Width, 50);
+            button_escape.Text = "ÍÀÇÀÄ";
+            button_escape.Click += button_escape_click;
+
+            this.Controls.Add(button_escape);
+        }
+
+        private void Label_Click(object? sender, EventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         public void create_saved_sudoku_ui()
@@ -638,6 +703,13 @@ namespace sudoku3
         public void destroy_krossvord_ui()
         {
             button_save_sudoku.Dispose();
+        }
+
+        public void destroy_choice_type_sudoku_ui()
+        {
+            button_classic.Dispose();
+            button_killer.Dispose();
+            button_escape.Dispose();
         }
 
         public void destroy_statistics_ui()
