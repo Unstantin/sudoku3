@@ -224,7 +224,6 @@ namespace sudoku3
                 if (areas.Count > MAX_N_AREA) { return null; }
                
             }
-            Console.WriteLine(cells_n + 20);
 
             foreach (List<(int, int)> area in areas)
             {
@@ -372,6 +371,11 @@ namespace sudoku3
 
             return res;
         }
+    }
+
+    public class TriangularGenerator
+    {
+       
     }
 
     //бесконечный цикл из-за того, что у блоков может и не быть рядом никаких клеток (см для программы)

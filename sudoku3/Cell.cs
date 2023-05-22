@@ -5,11 +5,27 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using static sudoku3.Board;
 
 namespace sudoku3
 {
     [Serializable]
-    public class Cell
+    abstract public class CellType {
+        public bool editable = false;
+        public bool correct = true;
+        public string value;
+
+        public int X;
+        public int Y;
+        public int xb;
+        public int yb;
+
+        abstract public void draw(Graphics e);
+        abstract public bool check_correctness();
+    }
+
+    [Serializable]
+    public class Cell : CellType
     {
         [NonSerialized] Font drawFont = new Font("Batang", 20);
         [NonSerialized] Font drawFontSums = new Font("Batang", 16);
@@ -20,19 +36,10 @@ namespace sudoku3
         [NonSerialized] public Form1 form;
         [NonSerialized] public Board board;
 
-        public bool editable = false;
-        public bool correct = true;
-        public string value;
-
-        public int X;
-        public int Y;
-
-        public int xb;
-        public int yb;
-
         public int block_color; // для нерегулярного судоку
 
-        public int area_id; //killer
+        //killer
+        public int area_id; 
         public bool with_area_sum = false;
 
         public Cell(Cell saved_cell, Form1 form, Board board)
@@ -64,7 +71,7 @@ namespace sudoku3
             this.yb = yb;
         }
 
-        public void draw(Graphics e)
+        public override void draw(Graphics e)
         {
             Point[] p = new Point[4] { new Point(X, Y), 
                                        new Point(X + board.cellwidth, Y),
@@ -132,8 +139,6 @@ namespace sudoku3
 
             e.DrawString(value, drawFont, drawBrush_edit, X + board.cellwidth / 4 + 9,
                     Y + board.cellwidth / 4 + 4, drawFormat);
-            /*e.DrawString(Convert.ToString(this.area_id), drawFont, drawBrush_edit, X + board.cellwidth / 4 + 9,
-                    Y + board.cellwidth / 4 + 4, drawFormat);*/
 
             if (this.with_area_sum)
             {
@@ -142,7 +147,7 @@ namespace sudoku3
             }
         }
 
-        public bool check_correctness()
+        public override bool check_correctness()
         {
             for (int i = 0; i < Board.N; i++)
             {
@@ -270,5 +275,84 @@ namespace sudoku3
                     break;
             }
         } //фигурное
+    }
+
+    [Serializable]
+    public class TriangularCell : CellType
+    {
+        [NonSerialized] Font drawFont = new Font("Batang", 20);
+        [NonSerialized] Font drawFontSums = new Font("Batang", 16);
+        [NonSerialized] SolidBrush drawBrush_non_edit = new SolidBrush(Color.White);
+        [NonSerialized] SolidBrush drawBrush_edit = new SolidBrush(Color.Black);
+        [NonSerialized] StringFormat drawFormat = new StringFormat();
+
+        [NonSerialized] public Form1 form;
+        [NonSerialized] public TriangularBoard board;
+
+        public bool isUp;
+
+        public TriangularCell(TriangularCell saved_cell, Form1 form, TriangularBoard board)
+        {
+            this.form = form;
+            this.board = board;
+            this.X = saved_cell.X;
+            this.Y = saved_cell.Y;
+            this.xb = saved_cell.xb;
+            this.yb = saved_cell.yb;
+            this.editable = saved_cell.editable;
+            this.correct = saved_cell.correct;
+            this.value = saved_cell.value;
+        }
+
+        public TriangularCell(string value, TriangularBoard board, int X, int Y, int xb, int yb)
+        {
+            this.form = board.form;
+            this.board = board;
+            this.X = X;
+            this.Y = Y;
+            this.xb = xb;
+            this.yb = yb;
+            this.value = value;
+
+            this.isUp = false;
+            if (this.yb % 2 == this.xb % 2)
+            {
+                isUp = true;
+            }
+        }
+
+        public override void draw(Graphics e)
+        {
+            Point[] p;
+            if (!isUp)
+            {
+                p = new Point[]
+                {
+                    new Point(X, Y + board.triangular_hight / 2),
+                    new Point(X + board.cellwidth / 2, Y - board.triangular_hight / 2),
+                    new Point(X - board.cellwidth / 2, Y - board.triangular_hight / 2)
+                };
+            } 
+            else 
+            {
+                p = new Point[]
+                {
+                    new Point(X, Y - board.triangular_hight / 2),
+                    new Point(X + board.cellwidth / 2, Y + board.triangular_hight / 2),
+                    new Point(X - board.cellwidth / 2, Y + board.triangular_hight / 2)
+                };
+            }
+
+            e.DrawPolygon(form.pen, p);
+            if(!correct)
+            {
+                e.FillPolygon(new SolidBrush(Color.White), p);
+            }
+        }
+
+        public override bool check_correctness()
+        {
+            return false;
+        }
     }
 }
