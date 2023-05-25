@@ -9,6 +9,8 @@ using System;
 using System.Runtime.Serialization;
 using Microsoft.VisualBasic;
 using System.Drawing.Configuration;
+using System.Net.NetworkInformation;
+using System.DirectoryServices.ActiveDirectory;
 
 namespace sudoku3
 {
@@ -34,10 +36,7 @@ namespace sudoku3
         }
 
         public Player player;
-        //public Board board;
-        //public TriangularBoard tr_board;
         public BoardType mainboard;
-        //public Dictionary<int, Board> saved_boards;
         public Dictionary<int, BoardType> saved_boards;
         public ClassicGenerator classicGenerator;
         public KillerGenerator killerGenetaror;
@@ -63,7 +62,8 @@ namespace sudoku3
         public Label label_instr;
         public Label label_index_save;
 
-        public Label label_statistics;
+        //public Label label_statistics;
+        public TableLayoutPanel statistics_panel;
 
         public Form1()
         {
@@ -220,11 +220,6 @@ namespace sudoku3
 
         public void button_statistics_click(object sender, EventArgs e)
         {
-            if(player.playes_n < 3)
-            {
-                MessageBox.Show("ÇÀÊÎÍ×ÈÒÅ ÕÎÒß ÁÛ 3 ÈÃÐÛ, ×ÒÎÁÛ ÏÎÑÌÎÒÐÅÒÜ ÑÒÀÒÈÑÒÈÊÓ!");
-                return;
-            }
             MODULE_ACTIVE = MODULES_ACTIVE.STATISTICS;
             destroy_menu_ui();
             create_statistics_ui();
@@ -331,7 +326,7 @@ namespace sudoku3
                 decision_buttons[i].Width = mainboard.cellwidth / 3;
                 decision_buttons[i].Height = mainboard.cellwidth / 3;
                  
-                if (mainboard.mode == BoardType.MODES.CLASSIC)
+                if (mainboard.mode == BoardType.MODES.CLASSIC || mainboard.mode == BoardType.MODES.TRIANGLE)
                 {
                     decision_buttons[i].BackColor = editable_cells_color;
                 }
@@ -431,13 +426,13 @@ namespace sudoku3
                     saved_boards.Remove(mainboard.save_index);
                     File.Delete($"savings/save{mainboard.save_index}.dat");
                     player.saves_n--;
-                    add_statistics(result);
+                    add_statistics(result, mainboard.mode);
                     break;
                 case 1: // ïîáåäà
                     saved_boards.Remove(mainboard.save_index);
                     File.Delete($"savings/save{mainboard.save_index}.dat");
                     player.saves_n--;
-                    add_statistics(result);
+                    add_statistics(result, mainboard.mode);
                     break;
                 case 2: // ñîõðàíåíèå
                     BinaryFormatter formatter = new BinaryFormatter();
@@ -469,17 +464,24 @@ namespace sudoku3
             create_end_ui(result);
         }
 
-        public void add_statistics(int result)
+        public void add_statistics(int result, Board.MODES mode)
         {
-            player.win_n += result;
-            player.playes_n++;
-            if(mainboard.solution_time < player.best_time && result==1)
+            player.playes_n_at_all++;
+
+            int index;
+            if (mode == Board.MODES.CLASSIC) { index = 0; }
+            else if (mode == Board.MODES.KILLER) { index = 1; }
+            else { index = 2; }
+
+            player.statistics[index].win_n += result;
+            player.statistics[index].playes_n++;
+            if (mainboard.solution_time < player.statistics[index].best_time && result == 1)
             {
-                player.best_time = (int)mainboard.solution_time;
+               player.statistics[index].best_time = (int)mainboard.solution_time;
             }
-            if(mainboard.lives == 3)
+            if (mainboard.lives == 3)
             {
-                player.win_without_mistakes_n++;
+                player.statistics[index].win_without_mistakes_n++;
             }
         }
 
@@ -598,34 +600,52 @@ namespace sudoku3
 
         public void create_statistics_ui()
         {
-            Font font = new Font("Microsoft Sans Serif", 20, FontStyle.Bold);
-            label_statistics = new Label();
-            label_statistics.Text = "";
-            label_statistics.Text += $"ÏÎÁÅÄ ÂÑÅÃÎ: {player.win_n}\n";
-            label_statistics.Text += $"ÏÐÎÖÅÍÒ ÏÎÁÅÄ: {player.win_n / player.playes_n * 100} %\n";
-            label_statistics.Text += $"ÏÐÎÖÅÍÒ ÏÎÁÅÄ: ÂÛ ÑÛÃÐÀËÈ 0 ÐÀÇ\n";
-            label_statistics.Text += $"ËÓ×ØÅÅ ÂÐÅÌß ÐÅØÅÍÈß: {player.best_time / 1000 / 60} ìèí {player.best_time / 1000 % 60} ñåê\n";
-            label_statistics.Text += $"ÊÎËÈ×ÅÑÒÂÎ ÏÎÁÅÄ ÁÅÇ ÎØÈÁÎÊ: {player.win_without_mistakes_n}\n";
-            label_statistics.Width = 650;
-            label_statistics.Height = 400;
-            label_statistics.Font = font;
-            label_statistics.BackColor = additable_color;
-            if (player.win_n == 0)
+            Font font = new Font("Cascadia Mono", 14, FontStyle.Bold);
+
+            statistics_panel = new TableLayoutPanel();
+            statistics_panel.Location = new Point((int)(this.ClientSize.Width * 0.15), (int)(this.ClientSize.Height * 0.35));
+            statistics_panel.AutoSize = true;
+            statistics_panel.ColumnCount = 3;
+            statistics_panel.Padding = new Padding(10);
+            statistics_panel.BackColor = Color.Black;
+            Label[] statistics_labels = new Label[3];
+            for (int i = 0; i < 3; i++)
             {
-                label_statistics.Text += $"ÏÐÎÖÅÍÒ ÏÎÁÅÄ ÁÅÇ ÎØÈÁÎÊ: ÂÛ ÅÙÅ ÍÈÐÀÇÓ ÍÅ ÂÛÉÃÐÀËÈ\n";
+                Label label_statistics = new Label();
+                label_statistics.AutoSize = true;
+                label_statistics.Text = "";
+                if (i == 0) { label_statistics.Text += "ÊËÀÑÑÈ×ÅÑÊÎÅ ÑÓÄÎÊÓ\n\n";} 
+                else if (i == 1) { label_statistics.Text += "ÊÈËËÅÐ-ÑÓÄÎÊÓ\n\n"; }
+                else { label_statistics.Text += "ÊÈËËÅÐ-ÑÓÄÎÊÓ\n\n"; }
+
+                label_statistics.Text += $"ÏÎÁÅÄ ÂÑÅÃÎ: {player.statistics[i].win_n}\n";
+                if(player.statistics[i].playes_n == 0)
+                {
+                    label_statistics.Text += $"ÏÐÎÖÅÍÒ ÏÎÁÅÄ: ÂÛ ÅÙÅ ÍÈÐÀÇÓ\nÍÅ ÑÛÃÐÀËÈ\n";
+                }
+                else
+                {
+                    label_statistics.Text += $"ÏÐÎÖÅÍÒ ÏÎÁÅÄ: {player.statistics[i].win_n / player.statistics[i].playes_n * 100} %\n";
+                }
+                label_statistics.Text += $"ËÓ×ØÅÅ ÂÐÅÌß ÐÅØÅÍÈß: {player.statistics[i].best_time / 1000 / 60} ìèí {player.statistics[i].best_time / 1000 % 60} ñåê\n";
+                label_statistics.Text += $"ÊÎËÈ×ÅÑÒÂÎ ÏÎÁÅÄ ÁÅÇ ÎØÈÁÎÊ: {player.statistics[i].win_without_mistakes_n}\n";
+                //label_statistics.Width = 650;
+                //label_statistics.Height = 400;
+                label_statistics.Font = font;
+                label_statistics.BackColor = additable_color;
+                if (player.statistics[i].win_n == 0)
+                {
+                    label_statistics.Text += $"ÏÐÎÖÅÍÒ ÏÎÁÅÄ ÁÅÇ ÎØÈÁÎÊ: ÂÛ ÅÙÅ ÍÈÐÀÇÓ\nÍÅ ÂÛÉÃÐÀËÈ\n";
+                }
+                else
+                {
+                    label_statistics.Text += $"ÏÐÎÖÅÍÒ ÏÎÁÅÄ ÁÅÇ ÎØÈÁÎÊ: {player.statistics[i].win_without_mistakes_n / player.statistics[i].win_n}\n";
+                }
+
+                statistics_panel.Controls.Add(label_statistics);
             }
-            else
-            {
-                label_statistics.Text += $"ÏÐÎÖÅÍÒ ÏÎÁÅÄ ÁÅÇ ÎØÈÁÎÊ: {player.win_without_mistakes_n / player.win_n}\n";
-            }
-            label_statistics.Location = new Point(
-                (this.ClientSize.Width - label_statistics.Width) / 2,
-                (int)(this.ClientSize.Height * 0.3)
-                );
+            this.Controls.Add(statistics_panel);
             
-
-            this.Controls.Add(label_statistics);
-
             button_escape = new Button();
             button_escape.Width = 100;
             button_escape.Height = 50;
@@ -754,7 +774,7 @@ namespace sudoku3
 
         public void destroy_statistics_ui()
         {
-            label_statistics.Dispose();
+            statistics_panel.Dispose();
             button_escape.Dispose();
         }
 
@@ -781,7 +801,23 @@ namespace sudoku3
     [Serializable]
     public class Player
     {
+        public Statistics[] statistics;
+        public int playes_n_at_all = 0;
         public int saves_n = 0;
+
+        public Player()
+        {
+            statistics = new Statistics[3];
+            for(int i = 0; i < 3; i++)
+            {
+                statistics[i] = new Statistics();
+            }
+        }
+    }
+
+    [Serializable]
+    public class Statistics
+    {
         public int win_n = 0;
         public int playes_n = 0;
         public int best_time = 0;

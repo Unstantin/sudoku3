@@ -189,15 +189,43 @@ namespace sudoku3
         [NonSerialized] public Form1 form;
 
         public TriangularCell[,] cells;
-        public int?[,] solution;
         public int width;
         public int triangular_hight;
         public int X;
         public int Y;
 
-        public TriangularBoard(TriangularBoard board, Form1 form)
+        public TriangularBoard(TriangularBoard saved_board, Form1 form)
         {
-            this.form = form;
+            this.form = form; 
+            this.width = saved_board.width;
+            this.cellwidth = saved_board.cellwidth;
+            this.active_cell = saved_board.active_cell;
+            this.saved = saved_board.saved;
+            this.save_index = saved_board.save_index;
+            this.empty_cells_n = saved_board.empty_cells_n;
+            this.mistake_cells_n = saved_board.mistake_cells_n;
+            this.lives = saved_board.lives;
+            this.solution_time = saved_board.solution_time;
+            this.triangular_hight = saved_board.triangular_hight;
+            this.mode = saved_board.mode;
+
+            this.X = saved_board.X;
+            this.Y = saved_board.Y;
+
+            cells = new TriangularCell[13, 8];
+            for (int i = 0; i < 13; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    cells[i, j] = new TriangularCell(
+                        saved_board.cells[i, j],
+                        form, this
+                    );
+                }
+            }
+
+            form.saved_boards.Remove(save_index);
+            form.saved_boards.Add(save_index, this);
         }
 
         public TriangularBoard(Form1 form)
@@ -239,9 +267,7 @@ namespace sudoku3
                 }
             }
 
-            //TriangularGenerator generator = new TriangularGenerator();
             form.triangularGenerator.triangular(cells);
-            //generator.triangular(cells);
         }
 
         public override void draw(Graphics e)

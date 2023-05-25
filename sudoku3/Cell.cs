@@ -293,6 +293,7 @@ namespace sudoku3
 
         public TriangularCell(TriangularCell saved_cell, Form1 form, TriangularBoard board)
         {
+            if(saved_cell == null) { return; }
             this.form = form;
             this.board = board;
             this.X = saved_cell.X;
@@ -302,6 +303,7 @@ namespace sudoku3
             this.editable = saved_cell.editable;
             this.correct = saved_cell.correct;
             this.value = saved_cell.value;
+            this.isUp = saved_cell.isUp;
         }
 
         public TriangularCell(string value, TriangularBoard board, int X, int Y, int xb, int yb)
@@ -323,6 +325,8 @@ namespace sudoku3
 
         public override void draw(Graphics e)
         {
+            if(value == null) { return; }
+
             Point[] p;
             if (!isUp)
             {
@@ -349,6 +353,10 @@ namespace sudoku3
             else if(this.editable)
             {
                 e.FillPolygon(new SolidBrush(form.editable_cells_color), p);
+            } 
+            if(this == board.active_cell)
+            {
+                e.FillPolygon(new SolidBrush(Color.FromArgb(75, 0, 0, 0)), p);
             }
 
             e.DrawPolygon(form.pen, p);
