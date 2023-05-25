@@ -239,7 +239,9 @@ namespace sudoku3
                 }
             }
 
-            //solution = form.classicGenerator.classic(cells);
+            //TriangularGenerator generator = new TriangularGenerator();
+            form.triangularGenerator.triangular(cells);
+            //generator.triangular(cells);
         }
 
         public override void draw(Graphics e)
@@ -288,7 +290,33 @@ namespace sudoku3
 
         public override void check_all_cells_for_mistake()
         {
-           
+            foreach (TriangularCell c in cells)
+            {
+                if (c == null) { continue; }
+                if (c.editable == false) { continue; }
+                if ((c.value == "") && (c.correct == false))
+                {
+                    mistake_cells_n--;
+                    c.correct = true;
+                    continue;
+                }
+                if (c.value == "")
+                {
+                    continue;
+                }
+
+                bool c_cor = c.correct;
+                c.correct = c.check_correctness();
+                if ((c_cor == false) && (c.correct != false))
+                {
+                    mistake_cells_n--;
+                }
+                if ((c_cor == true) && (c.correct != true))
+                {
+                    mistake_cells_n++;
+                }
+            }
+            form.Invalidate();
         }
     }
 }

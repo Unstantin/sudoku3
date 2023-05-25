@@ -1,5 +1,7 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Drawing;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -184,12 +186,10 @@ namespace sudoku3
                     }
                     if(sum > board.sums_of_areas[area_id])
                     {
-                        Console.WriteLine($"СУММА БОЛЬШЕ сейчас {sum} а по факту {board.sums_of_areas[area_id]}");;
                         return false;
                     }
                     if(value == c.value && !((xb == c.xb) && (yb == c.yb)))
                     {
-                        Console.WriteLine("Цифра уже была в блоке");
                         return false;
                     }
                 }
@@ -342,16 +342,127 @@ namespace sudoku3
                     new Point(X - board.cellwidth / 2, Y + board.triangular_hight / 2)
                 };
             }
+            if(!this.correct)
+            {
+                e.FillPolygon(Brushes.OrangeRed, p);
+            }
+            else if(this.editable)
+            {
+                e.FillPolygon(new SolidBrush(form.editable_cells_color), p);
+            }
 
             e.DrawPolygon(form.pen, p);
-            if(!correct)
+
+            Font drawFont = new Font("Batang", 15);
+            SolidBrush drawBrush_edit = new SolidBrush(Color.White);
+            StringFormat drawFormat = new StringFormat();
+            if(isUp)
             {
-                e.FillPolygon(new SolidBrush(Color.White), p);
+                e.DrawString(value, drawFont, drawBrush_edit, X - 8, Y - 5, drawFormat);
+            } 
+            else
+            {
+                e.DrawString(value, drawFont, drawBrush_edit, X - 8, Y - 12, drawFormat);
             }
         }
 
         public override bool check_correctness()
         {
+            return !inBlock() && check_diagonals((xb, yb));
+        }
+
+        public bool inBlock()
+        {
+            int block_id = 0;
+            foreach ((int, int)[] list in TriangularGenerator.blocks_coords)
+            {
+                bool find = false;
+                foreach ((int, int) c in list)
+                {
+                    if (c.Item1 == xb && c.Item2 == yb)
+                    {
+                        find = true;
+                        break;
+                    }
+                }
+
+                if (find) { break; } else { block_id++; }
+            }
+
+            foreach ((int, int) coords in TriangularGenerator.blocks_coords[block_id])
+            {
+                if (coords == (xb, yb)) { continue; }
+                if (board.cells[coords.Item1, coords.Item2].value == Convert.ToString(value))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool check_diagonals((int, int) coords)
+        {
+            return
+                !check_direction(coords, 1, 1) &&
+                !check_direction(coords, 1, -1) &&
+                !check_direction(coords, -1, 1) &&
+                !check_direction(coords, -1, -1) &&
+                !check_row(coords);
+        }
+
+        public bool check_direction((int, int) coords, int sx, int sy)
+        {
+            int step_x = 0;
+            int step_y = 0;
+
+            int i;
+            if (board.cells[coords.Item1, coords.Item2].isUp)
+            { i = 0; } else { i = 1; }
+
+            while (true)
+            {
+                if (sy > 0)
+                {
+                    if (i % 2 == 0) { step_y += sy; }
+                    else { step_x += sx; }
+                }
+                else
+                {
+                    if (i % 2 == 0) { step_x += sx; }
+                    else { step_y += sy; }
+                }
+                i++;
+
+                if (
+                    coords.Item1 + step_x < 0 || coords.Item2 + step_y < 0 ||
+                    coords.Item1 + step_x > 12 || coords.Item2 + step_y > 7
+                   )
+                { break; }
+
+                if (board.cells[coords.Item1 + step_x, coords.Item2 + step_y] != null)
+                {
+                    if (board.cells[coords.Item1 + step_x, coords.Item2 + step_y].value == Convert.ToString(value))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public bool check_row((int, int) coords)
+        {
+            for (int i = 0; i < 13; i++)
+            {
+                if (board.cells[i, coords.Item2] == null) { continue; }
+                if ((i, coords.Item2) == (xb,yb)) { continue; }
+                if (board.cells[i, coords.Item2].value == Convert.ToString(value))
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
     }

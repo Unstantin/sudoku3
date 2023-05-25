@@ -41,10 +41,12 @@ namespace sudoku3
         public Dictionary<int, BoardType> saved_boards;
         public ClassicGenerator classicGenerator;
         public KillerGenerator killerGenetaror;
+        public TriangularGenerator triangularGenerator;
 
         public Button button_start;
         public Button button_classic;
         public Button button_killer;
+        public Button button_hoshi;
         public Button button_start_in_saved_sudoku;
         public Button_quit button_quit;
         public Button button_escape;
@@ -182,8 +184,7 @@ namespace sudoku3
         public void button_classic_click(object sender, EventArgs e)
         {
             classicGenerator = new ClassicGenerator();
-            //mainboard = new Board(this, Board.MODES.CLASSIC);
-            mainboard = new TriangularBoard(this);
+            mainboard = new Board(this, Board.MODES.CLASSIC);
             destroy_choice_type_sudoku_ui();
             create_krossvord_ui();
             mainboard.lives = 3;
@@ -197,6 +198,18 @@ namespace sudoku3
             classicGenerator = new ClassicGenerator();
             killerGenetaror = new KillerGenerator();
             mainboard = new Board(this, Board.MODES.KILLER);
+            destroy_choice_type_sudoku_ui();
+            create_krossvord_ui();
+            mainboard.lives = 3;
+            Invalidate();
+            MODULE_ACTIVE = MODULES_ACTIVE.KROSSVORD;
+            watch.Start();
+        }
+
+        public void button_hoshi_click(object sender, EventArgs e)
+        {
+            triangularGenerator = new TriangularGenerator();
+            mainboard = new TriangularBoard(this);
             destroy_choice_type_sudoku_ui();
             create_krossvord_ui();
             mainboard.lives = 3;
@@ -366,6 +379,7 @@ namespace sudoku3
                 }
             }
             decision_panel.Dispose();
+            Invalidate();
         }
 
         public void draw_lives(Graphics e)
@@ -519,10 +533,20 @@ namespace sudoku3
             button_killer.Height = 200;
             button_killer.Image = Image.FromFile("killer.png");
             button_killer.Location = new Point((int)(ClientSize.Width * 0.7),
-                                                (ClientSize.Height - button_classic.Height) / 2);
+                                                (ClientSize.Height - button_killer.Height) / 2);
             button_killer.Click += button_killer_click;
 
             this.Controls.Add(button_killer);
+
+            button_hoshi = new Button();
+            button_hoshi.Width = 400;
+            button_hoshi.Height = 200;
+            button_hoshi.Image = Image.FromFile("hoshi.png");
+            button_hoshi.Location = new Point((int)(ClientSize.Width * 0.4),
+                                                (ClientSize.Height - button_hoshi.Height) / 2);
+            button_hoshi.Click += button_hoshi_click;
+
+            this.Controls.Add(button_hoshi);
 
             button_escape = new Button();
             button_escape.Width = 100;
@@ -724,6 +748,7 @@ namespace sudoku3
         {
             button_classic.Dispose();
             button_killer.Dispose();
+            button_hoshi.Dispose();
             button_escape.Dispose();
         }
 
